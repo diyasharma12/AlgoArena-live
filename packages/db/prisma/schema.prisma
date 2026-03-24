@@ -1,0 +1,209 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String              @id @default(cuid())
+  name              String
+  email             String              @unique
+  emailVerified     Boolean             @default(true)
+  image             String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  rating            Int                 @default(1200)
+
+  accounts          Account[]
+  sessions          Session[]
+  
+  SentRequests      FriendRequest[]     @relation("SentRequests")
+  ReceivedRequests  FriendRequest[]     @relation("ReceivedRequests")
+  FriendsA          Friend[]            @relation("FriendsA")
+  FriendsB          Friend[]            @relation("FriendsB")
+  SentMessages      Message[]           @relation("SentMessages")
+  ReceivedMessages  Message[]           @relation("ReceivedMessages")
+  Submissions       Submission[]        @relation("Submissions")
+  Matches           MatchParticipant[]
+  LeaderboardEntry  LeaderboardEntry?
+}
+
+model Account {
+  id                    String      @id @default(cuid())
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  idToken               String?
+  scope                 String?
+  password              String?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  user                  User        @relation(fields: [userId], references: [id])
+}
+
+model Session {
+  id                String        @id @default(cuid())
+  userId            String
+  token             String        @unique
+  expiresAt         DateTime
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  ipAddress         String?
+  userAgent         String?
+
+  user              User          @relation(fields: [userId], references: [id])
+}
+
+model Verification {
+  id                String        @id @default(cuid())
+  identifier        String
+  value             String
+  expiresAt         DateTime
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+}
+
+model Question {
+  id                Int           @id @default(autoincrement())
+  category          String
+  difficulty        String
+  question          String
+  testcases         Json
+  createdAt         DateTime      @default(now())
+}
+
+model Submission {
+  id                String     @id @default(cuid())
+  userId            String
+  questionId        Int
+  matchId           String
+  code              String
+  status            String
+  createdAt         DateTime   @default(now())
+
+  user              User       @relation("Submissions", fields: [userId], references: [id])
+  match             Match      @relation(fields: [matchId], references: [id])
+  
+  @@index([matchId, questionId])
+}
+
+enum MatchStatus {
+  WAITING
+  RUNNING 
+  FINISHED
+}
+
+model Match {
+  id              String              @id @default(uuid())
+  status          MatchStatus         
+  winnerId        String?
+  startedAt       DateTime?
+  endedAt         DateTime?
+  createdAt       DateTime            @default(now())
+
+  questions       MatchQuestion[]
+  submissions     Submission[]
+  participants    MatchParticipant[]
+}
+
+model MatchParticipant {
+  matchId      String
+  userId       String
+  joinedAt     DateTime @default(now())
+  ratingChange Int?
+
+  match      Match @relation(fields: [matchId], references: [id])
+  user       User  @relation(fields: [userId], references: [id])
+
+  @@unique([matchId, userId])
+  @@index([userId])
+}
+
+model MatchQuestion {
+  id         String     @id @default(uuid())
+  matchId    String
+  questionId Int
+  order      Int        
+
+  match      Match      @relation(fields: [matchId], references: [id])
+}
+
+
+model FriendRequest {
+  id          String        @id @default(cuid())
+  requester   User          @relation("SentRequests", fields: [requesterId], references: [id])
+  requesterId String
+  addressee   User          @relation("ReceivedRequests", fields: [addresseeId], references: [id])
+  addresseeId String
+  status      RequestStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model Friend {
+  id        String   @id @default(cuid())
+  userA     User     @relation("FriendsA", fields: [userAId], references: [id])
+  userAId   String
+  userB     User     @relation("FriendsB", fields: [userBId], references: [id])
+  userBId   String
+  createdAt DateTime @default(now())
+
+  @@unique([userAId, userBId])
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  senderId   String
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  receiverId String
+  content    String
+  createdAt  DateTime @default(now())
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  rating    Int
+  message   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+}
+
+model LeaderboardEntry {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  rank            Int      @default(0)
+  rating          Int      @default(1200)
+  wins            Int      @default(0)
+  losses          Int      @default(0)
+  totalMatches    Int      @default(0)
+  winStreak       Int      @default(0)
+  bestWinStreak   Int      @default(0)
+  lastMatchAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([rating(sort: Desc)])
+  @@index([rank])
+  @@index([wins(sort: Desc)])
+}

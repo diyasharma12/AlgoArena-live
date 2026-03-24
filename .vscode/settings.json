@@ -1,0 +1,10 @@
+{
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
+  "editor.tabSize": 2,
+  "editor.insertSpaces": false,
+  "prisma.pinToPrisma6": true
+}

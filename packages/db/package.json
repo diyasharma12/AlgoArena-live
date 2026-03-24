@@ -1,0 +1,36 @@
+{
+  "name": "@repo/db",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "prisma generate && tsc",
+    "generate": "prisma generate",
+    "migrate": "prisma migrate dev",
+    "migrate:reset": "prisma migrate reset",
+    "studio": "prisma studio",
+    "deploy": "prisma migrate deploy",
+    "seed": "ts-node src/seed.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "ts-node": "^10.9.2"
+  },
+  "dependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^22.15.3",
+    "typescript": "^5.9.2",
+    "prisma": "^6.16.2",
+    "@prisma/client": "6.16.2"
+  }
+}

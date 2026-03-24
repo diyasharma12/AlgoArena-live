@@ -1,0 +1,26 @@
+{
+  "name": "@repo/types",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/types.ts",
+  "types": "./src/types.ts",
+  "exports": {
+    ".": {
+      "types": "./src/types.ts",
+      "default": "./src/types.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {},
+  "dependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^22.15.3",
+    "typescript": "^5.9.2",
+    "zod": "^4.1.11"
+  }
+}
