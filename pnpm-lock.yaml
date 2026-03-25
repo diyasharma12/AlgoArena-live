@@ -290,8 +290,8 @@ importers:
         specifier: ^5.58.7
         version: 5.71.0
       ioredis:
-        specifier: ^5.8.0
-        version: 5.10.1
+        specifier: 5.9.3
+        version: 5.9.3
       typescript:
         specifier: ^5.9.2
         version: 5.9.2
