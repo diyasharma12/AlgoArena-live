@@ -32,7 +32,7 @@ export const auth = betterAuth({
     },
   },
 	trustedOrigins: [
-    "https://www.dsaroundrobin.fun",
+    "https://algo-arena-live.vercel.app/",
     "http://localhost:3000",
     process.env.CLIENT_URL,
   ].filter(Boolean) as string[],

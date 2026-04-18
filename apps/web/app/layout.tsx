@@ -15,7 +15,7 @@ const minecraftFont = Press_Start_2P({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://www.dsaroundrobin.fun"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://algo-arena-live.vercel.app/"),
   title: {
     default: "AlgoArena Live - Real-time 1v1 DSA Coding Battles",
     template: "%s | AlgoArena Live"
@@ -51,15 +51,14 @@ export const metadata: Metadata = {
     "Backend"
   ],
   authors: [
-    { name: "Divyanshu Chandra", url: "https://github.com/DIvyanshuVortex" },
-    { name: "Sahitya Chandra", url: "https://github.com/sahitya-chandra" }
+    { name: "Diya Sharma", url: "https://github.com/diyasharma12" }
   ],
-  creator: "Divyanshu Chandra & Sahitya Chandra",
+  creator: "Diya Sharma",
   publisher: "AlgoArena Live",
   openGraph: {
     title: "AlgoArena Live - Real-time 1v1 DSA Coding Battles",
     description: "AlgoArena Live is a real-time multiplayer coding battleground. Practice DSA, challenge friends to 1v1 battles, and master algorithms in a competitive environment.",
-    url: "https://www.dsaroundrobin.fun",
+    url: "https://algo-arena-live.vercel.app/",
     siteName: "AlgoArena Live",
     locale: "en_US",
     type: "website",
@@ -135,13 +134,8 @@ export default function RootLayout({
               "author": [
                 {
                   "@type": "Person",
-                  "name": "Divyanshu Chandra",
-                  "url": "https://github.com/DIvyanshuVortex"
-                },
-                {
-                  "@type": "Person",
-                  "name": "Sahitya Chandra",
-                  "url": "https://github.com/sahitya-chandra"
+                  "name": "Diya Sharma",
+                  "url": "https://github.com/diyasharma12"
                 }
               ]
             })
