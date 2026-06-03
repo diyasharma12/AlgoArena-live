@@ -64,9 +64,40 @@ export function useSocket(userId: string, slug?: string, onMatchFound?: (data: a
         : `${API_BASE_URL}/api/match/active`;
 
       try {
-        const res = await fetch(url, {
-          credentials: "include",
-        });
+        const res = await fetch(url, { credentials: "include" });
+
+        if (!res.ok) {
+          // If no match found for a practice slug, create a local practice match and retry
+          if (res.status === 404 && slug?.startsWith("practice:")) {
+            try {
+              await fetch(`${API_BASE_URL}/api/match/create`, {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ requesterId: userId, opponentId: userId }),
+              });
+
+              const retry = await fetch(url, { credentials: "include" });
+              const data2 = await retry.json();
+              if (data2?.matchId) {
+                s.emit("join_match", { matchId: data2.matchId });
+                setMatchData({
+                  matchId: data2.matchId,
+                  opponentId: data2.opponentId,
+                  questions: data2.questions,
+                  opponent: data2.opponent,
+                });
+                setTiming(data2.startedAt, Number(data2.duration));
+                if (onMatchFound) onMatchFound(data2);
+                return data2;
+              }
+            } catch (e) {
+              console.error("Failed to create practice match:", e);
+            }
+          }
+          return null;
+        }
+
         const data = await res.json();
 
         if (data.matchId) {
@@ -78,7 +109,6 @@ export function useSocket(userId: string, slug?: string, onMatchFound?: (data: a
             opponent: data.opponent,
           });
           setTiming(data.startedAt, Number(data.duration));
-          
           if (onMatchFound) onMatchFound(data);
           return data;
         }
@@ -88,9 +118,12 @@ export function useSocket(userId: string, slug?: string, onMatchFound?: (data: a
       return null;
     };
 
+    const shouldJoinMatch = slug ? !slug.startsWith("practice:") : true;
     const handleConnect = () => {
         console.log("Socket connected, rejoining match if any...");
-        joinExistingMatch();
+        if (shouldJoinMatch) {
+          joinExistingMatch();
+        }
     };
     
     s.on("connect", handleConnect);
@@ -103,7 +136,7 @@ export function useSocket(userId: string, slug?: string, onMatchFound?: (data: a
     })
     s.on("connect_error", (err) => console.log("Connect error:", err.message));
 
-     if (s.connected) {
+     if (s.connected && shouldJoinMatch) {
       joinExistingMatch();
     }
     // return () => {

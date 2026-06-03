@@ -1,10 +1,23 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import prisma from "@repo/db";
+import dotenv from "dotenv";
+
+// Ensure env is loaded even if import order changes.
+dotenv.config({ path: "../../.env" });
 
 // Local dev on localhost should not use cross-subdomain cookies.
 // Those are only needed for real domains in production.
 const isProd = process.env.NODE_ENV === "production";
+
+const hasGoogleCreds =
+  Boolean(process.env.GOOGLE_CLIENT_ID) && Boolean(process.env.GOOGLE_CLIENT_SECRET);
+
+if (!hasGoogleCreds) {
+  console.warn(
+    "[Auth] Google OAuth disabled: GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET missing at runtime"
+  );
+}
 
 export const auth = betterAuth({
 	database: prismaAdapter(prisma, {
@@ -13,12 +26,14 @@ export const auth = betterAuth({
 	emailAndPassword: { 
     enabled: true, 
   },
-  socialProviders: { 
-    google: { 
-      clientId: process.env.GOOGLE_CLIENT_ID as string, 
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string, 
-    }, 
-  },
+  socialProviders: hasGoogleCreds
+    ? {
+        google: {
+          clientId: process.env.GOOGLE_CLIENT_ID as string,
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+        },
+      }
+    : undefined,
   advanced: {
     crossSubDomainCookies: {
       enabled: isProd,

@@ -70,7 +70,15 @@ export const RejoinMatchToast: React.FC<RejoinMatchToastProps> = ({
         
         <div className="flex gap-3 w-full pt-2">
           <button
-            onClick={onGiveUp}
+            type="button"
+            onClick={() => {
+              console.log("RejoinMatchToast: Give Up clicked");
+              try {
+                onGiveUp();
+              } catch (e) {
+                console.error("onGiveUp handler threw:", e);
+              }
+            }}
             className="
               flex-1
               flex items-center justify-center gap-2
@@ -89,7 +97,15 @@ export const RejoinMatchToast: React.FC<RejoinMatchToastProps> = ({
           </button>
           
           <button
-            onClick={onRejoin}
+            type="button"
+            onClick={() => {
+              console.log("RejoinMatchToast: Rejoin clicked");
+              try {
+                onRejoin();
+              } catch (e) {
+                console.error("onRejoin handler threw:", e);
+              }
+            }}
             className="
               flex-1
               flex items-center justify-center gap-2
