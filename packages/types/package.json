@@ -2,14 +2,14 @@
   "name": "@repo/types",
   "version": "1.0.0",
   "private": true,
-  "main": "./src/types.ts",
-  "types": "./src/types.ts",
+  "main": "./dist/types.js",
+  "types": "./dist/types.d.ts",
   "exports": {
     ".": {
-      "types": "./src/types.ts",
-      "default": "./src/types.ts"
-    }
-  },
+    "types": "./dist/types.d.ts",
+    "default": "./dist/types.js"
+  }
+},
   "scripts": {
     "build": "tsc"
   },
