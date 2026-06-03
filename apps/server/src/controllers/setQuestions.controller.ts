@@ -37,7 +37,7 @@ export const setQuestions = async (req: Request, res: Response) => {
         testcases: q.testcases ?? [],
       }));
       console.log("setQuestions: fetched from DB, count=", questions.length);
-    } catch (dbErr) {
+    } catch (dbErr: any) {
       console.error("setQuestions: DB query failed, falling back to local file:", dbErr?.message ?? dbErr);
     }
 
