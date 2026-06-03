@@ -16,7 +16,8 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*"
+    "@repo/eslint-config": "workspace:*",
+    "@types/uuid": "^11.0.0"
   },
   "dependencies": {
     "@repo/db": "workspace:*",
