@@ -59,12 +59,14 @@ export async function finishMatchForUser(
   matchId: string,
   userId: string
 ): Promise<void> {
+  const safeMatchId = decodeURIComponent(matchId);
+
   try {
-    const raw = await redis.hgetall(`${ACTIVE_MATCH_PREFIX}${matchId}`);
+    const raw = await redis.hgetall(`${ACTIVE_MATCH_PREFIX}${safeMatchId}`);
     
     if (!raw || Object.keys(raw).length === 0) {
       const dbMatch = await prisma.match.findUnique({
-        where: { id: matchId },
+        where: { id: safeMatchId },
         include: { participants: true }
       });
 

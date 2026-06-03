@@ -4,7 +4,7 @@
 
 ### Overview
 
-DSA Round Robin is a TurboRepo monorepo with three apps (`apps/web`, `apps/server`, `apps/worker`) and shared packages under `packages/`. See `README.md` for full architecture and `CONTRIBUTING.md` for standard commands (`pnpm dev`, `pnpm lint`, `pnpm check-types`, `pnpm build`).
+AlgoArena is a TurboRepo monorepo with three apps (`apps/web`, `apps/server`, `apps/worker`) and shared packages under `packages/`. See `README.md` for full architecture and `CONTRIBUTING.md` for standard commands (`pnpm dev`, `pnpm lint`, `pnpm check-types`, `pnpm build`).
 
 ### Prerequisites
 

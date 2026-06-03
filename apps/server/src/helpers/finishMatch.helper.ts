@@ -15,6 +15,15 @@ export async function finishMatchById(matchId: string, opts: { reason?: string, 
   const requesterId = raw.requesterId!;
   const opponentId = raw.opponentId!;
 
+  const safeParseJson = <T>(value: string | undefined): T | null => {
+    if (!value) return null;
+    try {
+      return JSON.parse(value) as T;
+    } catch {
+      return null;
+    }
+  };
+
   try {
     const MAX_RETRIES = 3;
     const RETRY_DELAY_MS = 1000;
@@ -23,7 +32,7 @@ export async function finishMatchById(matchId: string, opts: { reason?: string, 
 
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
-        const questions: Array<{ questionData: { id: string }, order: number }> = raw.questions ? JSON.parse(raw.questions) : [];
+        const questions = safeParseJson<Array<{ questionData: { id: string }; order: number }>>(raw.questions) || [];
         const startedAt = raw.startedAt ? new Date(raw.startedAt) : new Date();
         const endedAt = new Date();
 
@@ -35,8 +44,16 @@ export async function finishMatchById(matchId: string, opts: { reason?: string, 
           redis.hgetall(oSubKey),
         ]);
 
-        const parseHash = (hash: Record<string, string>) => 
-          Object.values(hash || {}).map((s) => JSON.parse(s));
+        const parseHash = (hash: Record<string, string>) =>
+          Object.values(hash || {})
+            .map((s) => {
+              try {
+                return JSON.parse(s);
+              } catch {
+                return null;
+              }
+            })
+            .filter(Boolean) as any[];
 
         const rSubs = parseHash(rHash || {});
         const oSubs = parseHash(oHash || {});
@@ -44,7 +61,7 @@ export async function finishMatchById(matchId: string, opts: { reason?: string, 
         const computeScore = (subs: any[]) => {
           const solved = new Map<number, any>();
           for (const s of subs) {
-            if (!s.result || s.status !== "DONE") continue;
+            if (!s?.result || s.status !== "DONE") continue;
             if (!s.result.passed) continue;
             const qid = s.questionId;
             if (!solved.has(qid) || new Date(s.createdAt) < new Date(solved.get(qid).createdAt)) {
@@ -95,43 +112,53 @@ export async function finishMatchById(matchId: string, opts: { reason?: string, 
           await tx.user.update({ where: { id: requesterId }, data: { rating: newRatingR } });
           await tx.user.update({ where: { id: opponentId }, data: { rating: newRatingO } });
 
-          await tx.match.create({
-            data: {
-              id: matchId,
-              status: "FINISHED",
-              winnerId,
-              startedAt,
-              endedAt,
-              participants: {
-                create: [
-                  { userId: requesterId, ratingChange: ratingChangeR },
-                  { userId: opponentId, ratingChange: ratingChangeO },
-                ],
-              },
-              questions: {
-                createMany: {
-                  data: questions.map((q) => ({
-                    questionId: q.questionData.id,
-                    order: q.order,
-                  })),
-                },
-              },
+          const matchData: any = {
+            id: matchId,
+            status: "FINISHED",
+            winnerId,
+            startedAt,
+            endedAt,
+            participants: {
+              create: [
+                { userId: requesterId, ratingChange: ratingChangeR },
+                { userId: opponentId, ratingChange: ratingChangeO },
+              ],
             },
-          });
+          };
 
-          const allSubs = [...rSubs, ...oSubs];
+          const validQuestions = Array.isArray(questions)
+            ? questions
+                .map((q) => ({ questionId: Number(q.questionData?.id), order: Number(q.order) }))
+                .filter((q) => Number.isInteger(q.questionId))
+            : [];
 
-          await tx.submission.createMany({
-            data: allSubs.map((s) => ({
-              id: s.id,
-              userId: s.userId,
-              questionId: s.questionId,
-              matchId,
-              code: s.code,
-              status: s.status === "DONE" && s.result?.passed ? "ACCEPTED" : "REJECTED",
-              createdAt: new Date(s.createdAt),
-            })),
-          });
+          if (validQuestions.length > 0) {
+            matchData.questions = { createMany: { data: validQuestions } };
+          }
+
+          await tx.match.create({ data: matchData });
+
+          const allSubs = [...rSubs, ...oSubs].filter(Boolean);
+          const submissionData = allSubs
+            .map((s) => {
+              const createdAt = new Date(s.createdAt);
+              if (!s.id || !s.userId || !s.questionId || Number.isNaN(createdAt.getTime())) return null;
+              return {
+                id: s.id,
+                userId: s.userId,
+                questionId: Number(s.questionId),
+                matchId,
+                code: s.code,
+                status: s.status === "DONE" && s.result?.passed ? "ACCEPTED" : "REJECTED",
+                createdAt,
+              };
+            })
+            .filter(Boolean);
+
+          if (submissionData.length > 0) {
+            await tx.submission.createMany({ data: submissionData });
+          }
+
           // --- START LEADERBOARD UPDATES ---
 
           const updateLeaderboard = async (userId: string, isWinner: boolean, newRating: number) => {
@@ -177,7 +204,6 @@ export async function finishMatchById(matchId: string, opts: { reason?: string, 
           await updateLeaderboard(opponentId, winnerId === opponentId, newRatingO);
 
           // --- END LEADERBOARD UPDATES ---
-
         }, {
           timeout: 20000,
         });
