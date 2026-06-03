@@ -158,7 +158,9 @@ export async function finishMatchById(matchId: string, opts: { reason?: string, 
           if (submissionData.length > 0) {
             await tx.submission.createMany({ data: submissionData });
           }
-
+        }, {
+          timeout: 20000,
+        });
           // --- START LEADERBOARD UPDATES ---
 
           const updateLeaderboard = async (userId: string, isWinner: boolean, newRating: number) => {
@@ -204,6 +206,7 @@ export async function finishMatchById(matchId: string, opts: { reason?: string, 
           await updateLeaderboard(opponentId, winnerId === opponentId, newRatingO);
 
           // --- END LEADERBOARD UPDATES ---
+
         }, {
           timeout: 20000,
         });
