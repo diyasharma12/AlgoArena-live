@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
 import prisma from "@repo/db";
 import type { Question } from "@repo/db";
 import { connection as redis } from "@repo/queue";
@@ -33,6 +32,7 @@ export async function createMatch(
   requesterId: string,
   opponentId: string
 ): Promise<CreatedMatch | null> {
+  const { v4: uuidv4 } = await import("uuid");
   const matchId = matchKey(requesterId, opponentId, uuidv4());
   const lockKey = `${matchId}:lock`;
 
